@@ -1,15 +1,23 @@
 """
 This code is based on Facebook's HDemucs code: https://github.com/facebookresearch/demucs
 """
+
 import math
 import torchaudio
 from torch.nn import functional as F
 
 
 class Audioset:
-    def __init__(self, files=None, length=None, stride=None,
-                 pad=True, with_path=False, sample_rate=None,
-                 channels=None):
+    def __init__(
+        self,
+        files=None,
+        length=None,
+        stride=None,
+        pad=True,
+        with_path=False,
+        sample_rate=None,
+        channels=None,
+    ):
         """
         files should be a list [(file, length)]
         """
@@ -45,20 +53,25 @@ class Audioset:
             if self.length is not None:
                 offset = self.stride * index
                 num_frames = self.length
-            if torchaudio.get_audio_backend() in ['soundfile', 'sox_io']:
-                out, sr = torchaudio.load(str(file),
-                                          frame_offset=offset,
-                                          num_frames=num_frames or -1)
+            if torchaudio.get_audio_backend() in ["soundfile", "sox_io"]:
+                out, sr = torchaudio.load(
+                    f"../../../{file}", frame_offset=offset, num_frames=num_frames or -1
+                )
             else:
-                out, sr = torchaudio.load(str(file), offset=offset, num_frames=num_frames)
-
+                out, sr = torchaudio.load(
+                    f"../../../{file}", frame_offset=offset, num_frames=num_frames
+                )
 
             if sr != self.sample_rate:
-                raise RuntimeError(f"Expected {file} to have sample rate of "
-                                   f"{self.sample_rate}, but got {sr}")
+                raise RuntimeError(
+                    f"Expected {file} to have sample rate of "
+                    f"{self.sample_rate}, but got {sr}"
+                )
             if out.shape[0] != self.channels:
-                raise RuntimeError(f"Expected {file} to have shape of "
-                                   f"{self.channels}, but got {out.shape[0]}")
+                raise RuntimeError(
+                    f"Expected {file} to have shape of "
+                    f"{self.channels}, but got {out.shape[0]}"
+                )
             if num_frames:
                 out = F.pad(out, (0, num_frames - out.shape[-1]))
             if self.with_path:
