@@ -19,12 +19,16 @@ def stft(x, fft_size, hop_size, win_length, window):
     Returns:
         Tensor: Magnitude spectrogram (B, #frames, fft_size // 2 + 1).
     """
-    x_stft = torch.stft(x, fft_size, hop_size, win_length, window)
+    x_stft = torch.stft(
+        x, fft_size, hop_size, win_length, window=window, return_complex=True
+    )
+    # View as real
+    x_stft = torch.view_as_real(x_stft)
     real = x_stft[..., 0]
     imag = x_stft[..., 1]
 
     # NOTE(kan-bayashi): clamp is needed to avoid nan or inf
-    return torch.sqrt(torch.clamp(real ** 2 + imag ** 2, min=1e-7)).transpose(2, 1)
+    return torch.sqrt(torch.clamp(real**2 + imag**2, min=1e-7)).transpose(2, 1)
 
 
 class SpectralConvergengeLoss(torch.nn.Module):
@@ -66,7 +70,9 @@ class LogSTFTMagnitudeLoss(torch.nn.Module):
 class STFTLoss(torch.nn.Module):
     """STFT loss module."""
 
-    def __init__(self, fft_size=1024, shift_size=120, win_length=600, window="hann_window"):
+    def __init__(
+        self, fft_size=1024, shift_size=120, win_length=600, window="hann_window"
+    ):
         """Initialize STFT loss module."""
         super(STFTLoss, self).__init__()
         self.fft_size = fft_size
@@ -96,11 +102,15 @@ class STFTLoss(torch.nn.Module):
 class MultiResolutionSTFTLoss(torch.nn.Module):
     """Multi resolution STFT loss module."""
 
-    def __init__(self,
-                 fft_sizes=[1024, 2048, 512],
-                 hop_sizes=[120, 240, 50],
-                 win_lengths=[600, 1200, 240],
-                 window="hann_window", factor_sc=0.1, factor_mag=0.1):
+    def __init__(
+        self,
+        fft_sizes=[1024, 2048, 512],
+        hop_sizes=[120, 240, 50],
+        win_lengths=[600, 1200, 240],
+        window="hann_window",
+        factor_sc=0.1,
+        factor_mag=0.1,
+    ):
         """Initialize Multi resolution STFT loss module.
         Args:
             fft_sizes (list): List of FFT sizes.
@@ -135,4 +145,4 @@ class MultiResolutionSTFTLoss(torch.nn.Module):
         sc_loss /= len(self.stft_losses)
         mag_loss /= len(self.stft_losses)
 
-        return self.factor_sc*sc_loss, self.factor_mag*mag_loss
+        return self.factor_sc * sc_loss, self.factor_mag * mag_loss
