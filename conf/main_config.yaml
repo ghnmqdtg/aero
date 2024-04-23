@@ -33,7 +33,7 @@ seed: 2036
 dummy: '' # use this if you want twice the same exp, with a different name
 
 # Evaluation stuff
-visqol: True # compute visqol?
+visqol: False # compute visqol?
 visqol_path: # *INSERT ABSOLUTE PATH TO VISQOL HERE*
 eval_every: 25  # compute test metrics every so epochs
 enhance_samples_limit: -1
