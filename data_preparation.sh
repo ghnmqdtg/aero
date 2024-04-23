@@ -1,0 +1,2 @@
+sh step_1_data_resample.sh
+sh step_2_egs_files.sh
