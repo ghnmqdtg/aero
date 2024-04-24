@@ -8,7 +8,7 @@ segment: 2
 stride: 2    # in seconds, how much to stride between training examples
 pad: true   # if training sample is too short, pad it
 upsample: false
-batch_size: 16
+batch_size: 24
 nfft: 512
 hop_length: 64
 

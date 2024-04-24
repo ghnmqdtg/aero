@@ -6,7 +6,9 @@ import torchaudio
 from PIL import Image
 
 from src.utils import LogProgress, convert_spectrogram_to_heatmap
+
 logger = logging.getLogger(__name__)
+
 
 def get_estimate(model, lr_sig):
     torch.set_num_threads(1)
@@ -18,15 +20,21 @@ def get_estimate(model, lr_sig):
 def write(wav, filename, sr):
     # Normalize audio if it prevents clipping
     wav = wav / max(wav.abs().max().item(), 1)
-    torchaudio.save(filename, wav.cpu(), sr)
+    torchaudio.save(
+        filename,
+        wav.cpu(),
+        sr,
+        bits_per_sample=16,
+    )
 
 
 def save_wavs(processed_sigs, lr_sigs, hr_sigs, filenames, lr_sr, hr_sr):
     # Write result
     for lr, hr, pr, filename in zip(lr_sigs, hr_sigs, processed_sigs, filenames):
-        write(lr, filename + "_lr.wav", sr=lr_sr)
-        write(hr, filename + "_hr.wav", sr=hr_sr)
-        write(pr, filename + "_pr.wav", sr=hr_sr)
+        write(lr, filename + "_down.wav", sr=lr_sr)
+        write(hr, filename + "_orig.wav", sr=hr_sr)
+        write(pr, filename + "_up.wav", sr=hr_sr)
+
 
 def save_specs(lr_spec, pr_spec, hr_spec, filename):
     lr_spec_path = filename + "_lr_spec.png"
@@ -53,8 +61,8 @@ def enhance(dataloader, model, args):
     model.eval()
 
     os.makedirs(args.samples_dir, exist_ok=True)
-    lr_sr = args.experiment.lr_sr if 'experiment' in args else args.lr_sr
-    hr_sr = args.experiment.hr_sr if 'experiment' in args else args.hr_sr
+    lr_sr = args.experiment.lr_sr if "experiment" in args else args.lr_sr
+    hr_sr = args.experiment.hr_sr if "experiment" in args else args.hr_sr
 
     total_filenames = []
 
@@ -65,8 +73,13 @@ def enhance(dataloader, model, args):
         (lr_sigs, lr_paths), (hr_sigs, hr_paths) = data
         lr_sigs = lr_sigs.to(args.device)
         hr_sigs = hr_sigs.to(args.device)
-        filenames = [os.path.join(args.samples_dir, os.path.basename(path).rsplit(".", 1)[0]) for path in lr_paths]
-        total_filenames += [os.path.basename(path).rsplit(".", 1)[0] for path in lr_paths]
+        filenames = [
+            os.path.join(args.samples_dir, os.path.basename(path).rsplit(".", 1)[0])
+            for path in lr_paths
+        ]
+        total_filenames += [
+            os.path.basename(path).rsplit(".", 1)[0] for path in lr_paths
+        ]
 
         estimates = get_estimate(model, lr_sigs)
         save_wavs(estimates, lr_sigs, hr_sigs, filenames, lr_sr, hr_sr)

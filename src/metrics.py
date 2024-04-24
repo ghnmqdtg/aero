@@ -20,8 +20,10 @@ def run_metrics(clean, estimate, args, filename):
     speech_mode = (
         args.experiment.speech_mode if "speech_mode" in args.experiment else True
     )
-    lsd, visqol = get_metrics(clean, estimate, hr_sr, filename, speech_mode, args)
-    return lsd, visqol
+    lsd, lsd_hf, lsd_lf, visqol = get_metrics(
+        clean, estimate, hr_sr, filename, speech_mode, args
+    )
+    return lsd, lsd_hf, lsd_lf, visqol
 
 
 def get_metrics(clean, estimate, sr, filename, speech_mode, args):
@@ -32,13 +34,18 @@ def get_metrics(clean, estimate, sr, filename, speech_mode, args):
     estimate_numpy = estimate.numpy()
     clean_numpy = clean.numpy()
 
-    lsd = get_lsd(clean, estimate).item()
+    lr_sr = args.experiment.lr_sr if "experiment" in args else args.lr_sr
+    hr_sr = args.experiment.hr_sr if "experiment" in args else args.hr_sr
+    # Highcut frequency
+    hf = int(1025 * (lr_sr / hr_sr))
+
+    lsd, lsd_hf, lsd_lf = get_lsd(clean, estimate, hf)
     visqol = (
         get_visqol(clean_numpy, estimate_numpy, filename, sr, speech_mode, visqol_path)
         if calc_visqol
         else 0
     )
-    return lsd, visqol
+    return lsd, lsd_hf, lsd_lf, visqol
 
 
 class STFTMag(nn.Module):
@@ -61,7 +68,7 @@ class STFTMag(nn.Module):
 
 
 # taken from: https://github.com/nanahou/metric/blob/master/measure_SNR_LSD.py
-def get_lsd(ref_sig, out_sig):
+def get_lsd(ref_sig, out_sig, hf):
     """
     Compute LSD (log spectral distance)
     Arguments:
@@ -72,7 +79,11 @@ def get_lsd(ref_sig, out_sig):
     stft = STFTMag(2048, 512)
     sp = torch.log10(stft(ref_sig).square().clamp(1e-8))
     st = torch.log10(stft(out_sig).square().clamp(1e-8))
-    return (sp - st).square().mean(dim=1).sqrt().mean()
+    return (
+        (sp - st).square().mean(dim=1).sqrt().mean(),
+        (sp[:, hf:, :] - st[:, hf:, :]).square().mean(dim=1).sqrt().mean(),
+        (sp[:, :hf, :] - st[:, :hf, :]).square().mean(dim=1).sqrt().mean(),
+    )
 
 
 # based on: https://github.com/eagomez2/upf-smc-speech-enhancement-thesis/blob/main/src/utils/evaluation_process.py

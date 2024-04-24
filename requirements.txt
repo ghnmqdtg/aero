@@ -12,3 +12,4 @@ torchvision==0.13.1+cu113
 torchaudio==0.12.1
 tqdm
 wandb
+scipy

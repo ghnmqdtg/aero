@@ -285,9 +285,19 @@ class Solver(object):
                         )
                     elif self.args.joint_evaluate_and_enhance:
                         logger.info("Jointly evaluating and enhancing.")
-                        lsd, visqol, enhanced_filenames = evaluate(
-                            self.args, self.tt_loader, epoch, self.model
-                        )
+                        (
+                            lsd,
+                            lsd_hf,
+                            lsd_lf,
+                            visqol,
+                            base_lsd,
+                            base_lsd_hf,
+                            base_lsd_lf,
+                            base_visqol,
+                            rtf,
+                            rtf_reciprocal,
+                            enhanced_filenames,
+                        ) = evaluate(self.args, self.tt_loader, epoch, self.model)
                     else:  # opposed to above cases, no spectrograms saved in samples directory.
                         enhanced_filenames = enhance(
                             self.tt_loader, self.model, self.args
