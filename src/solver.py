@@ -329,7 +329,7 @@ class Solver(object):
                         bold(f"Evaluation Time {time.time() - evaluation_start:.2f}s")
                     )
 
-                metrics.update({METRICS_KEY_LSD: lsd, METRICS_KEY_VISQOL: visqol})
+                metrics.update({METRICS_KEY_LSD: lsd.item(), METRICS_KEY_VISQOL: visqol})
 
             wandb.log(metrics, step=epoch)
             self.history.append(metrics)

@@ -132,5 +132,6 @@ slurm-*.out
 
 VCTK*
 outputs/
+test_samples/
 egs/
 *.out

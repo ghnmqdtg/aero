@@ -59,6 +59,7 @@ class STFTMag(nn.Module):
     @torch.no_grad()
     def forward(self, x):
         T = x.shape[-1]
+        self.window = self.window.to(x.device)
         stft = torch.stft(
             x, self.nfft, self.hop, window=self.window, return_complex=True
         )  # [B, F, TT]
