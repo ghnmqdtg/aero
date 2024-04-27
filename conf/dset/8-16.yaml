@@ -1,0 +1,5 @@
+# @package dset
+name: 8-16
+train: egs/vctk/8-16/tr
+valid:
+test: egs/vctk/8-16/val

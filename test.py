@@ -153,6 +153,7 @@ def _main(args):
     for key, value in args.dset.items():
         if isinstance(value, str):
             args.dset[key] = hydra.utils.to_absolute_path(value)
+
     __file__ = hydra.utils.to_absolute_path(__file__)
     if args.verbose:
         logger.setLevel(logging.DEBUG)
