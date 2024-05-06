@@ -1,6 +1,7 @@
 """
 This code is based on Facebook's HDemucs code: https://github.com/facebookresearch/demucs
 """
+
 import numpy as np
 import torch
 from torch import nn
@@ -11,6 +12,7 @@ from src.models.spec import spectro, ispectro
 from src.models.modules import DConv, ScaledEmbedding, FTB
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,10 +31,25 @@ def rescale_module(module, reference):
 
 
 class HEncLayer(nn.Module):
-    def __init__(self, chin, chout, kernel_size=8, stride=4, norm_groups=1, empty=False,
-                 freq=True, dconv=True, is_first=False, freq_attn=False, freq_dim=None, norm=True, context=0,
-                 dconv_kw={}, pad=True,
-                 rewrite=True):
+    def __init__(
+        self,
+        chin,
+        chout,
+        kernel_size=8,
+        stride=4,
+        norm_groups=1,
+        empty=False,
+        freq=True,
+        dconv=True,
+        is_first=False,
+        freq_attn=False,
+        freq_dim=None,
+        norm=True,
+        context=0,
+        dconv_kw={},
+        pad=True,
+        rewrite=True,
+    ):
         """Encoder layer. This used both by the time and the frequency branch.
 
         Args:
@@ -136,9 +153,24 @@ class HEncLayer(nn.Module):
 
 
 class HDecLayer(nn.Module):
-    def __init__(self, chin, chout, last=False, kernel_size=8, stride=4, norm_groups=1, empty=False,
-                 freq=True, dconv=True, norm=True, context=1, dconv_kw={}, pad=True,
-                 context_freq=True, rewrite=True):
+    def __init__(
+        self,
+        chin,
+        chout,
+        last=False,
+        kernel_size=8,
+        stride=4,
+        norm_groups=1,
+        empty=False,
+        freq=True,
+        dconv=True,
+        norm=True,
+        context=1,
+        dconv_kw={},
+        pad=True,
+        context_freq=True,
+        rewrite=True,
+    ):
         """
         Same as HEncLayer but for decoder. See `HEncLayer` for documentation.
         """
@@ -178,8 +210,9 @@ class HDecLayer(nn.Module):
             if context_freq:
                 self.rewrite = klass(chin, 2 * chin, 1 + 2 * context, 1, context)
             else:
-                self.rewrite = klass(chin, 2 * chin, [1, 1 + 2 * context], 1,
-                                     [0, context])
+                self.rewrite = klass(
+                    chin, 2 * chin, [1, 1 + 2 * context], 1, [0, context]
+                )
             self.norm1 = norm_fn(2 * chin)
 
         self.dconv = None
@@ -206,9 +239,9 @@ class HDecLayer(nn.Module):
         z = self.norm2(self.conv_tr(y))
         if self.freq:
             if self.pad:
-                z = z[..., self.pad:-self.pad, :]
+                z = z[..., self.pad : -self.pad, :]
         else:
-            z = z[..., self.pad:self.pad + length]
+            z = z[..., self.pad : self.pad + length]
             assert z.shape[-1] == length, (z.shape[-1], length)
         if not self.last:
             z = F.gelu(z)
@@ -221,51 +254,53 @@ class Aero(nn.Module):
     """
 
     @capture_init
-    def __init__(self,
-                 # Channels
-                 in_channels=1,
-                 out_channels=1,
-                 audio_channels=2,
-                 channels=48,
-                 growth=2,
-                 # STFT
-                 nfft=512,
-                 hop_length=64,
-                 end_iters=0,
-                 cac=True,
-                 # Main structure
-                 rewrite=True,
-                 hybrid=False,
-                 hybrid_old=False,
-                 # Frequency branch
-                 freq_emb=0.2,
-                 emb_scale=10,
-                 emb_smooth=True,
-                 # Convolutions
-                 kernel_size=8,
-                 strides=[4, 4, 2, 2],
-                 context=1,
-                 context_enc=0,
-                 freq_ends=4,
-                 enc_freq_attn=4,
-                 # Normalization
-                 norm_starts=2,
-                 norm_groups=4,
-                 # DConv residual branch
-                 dconv_mode=1,
-                 dconv_depth=2,
-                 dconv_comp=4,
-                 dconv_time_attn=2,
-                 dconv_lstm=2,
-                 dconv_init=1e-3,
-                 # Weight init
-                 rescale=0.1,
-                 # Metadata
-                 lr_sr=4000,
-                 hr_sr=16000,
-                 spec_upsample=True,
-                 act_func='snake',
-                 debug=False):
+    def __init__(
+        self,
+        # Channels
+        in_channels=1,
+        out_channels=1,
+        audio_channels=2,
+        channels=48,
+        growth=2,
+        # STFT
+        nfft=512,
+        hop_length=64,
+        end_iters=0,
+        cac=True,
+        # Main structure
+        rewrite=True,
+        hybrid=False,
+        hybrid_old=False,
+        # Frequency branch
+        freq_emb=0.2,
+        emb_scale=10,
+        emb_smooth=True,
+        # Convolutions
+        kernel_size=8,
+        strides=[4, 4, 2, 2],
+        context=1,
+        context_enc=0,
+        freq_ends=4,
+        enc_freq_attn=4,
+        # Normalization
+        norm_starts=2,
+        norm_groups=4,
+        # DConv residual branch
+        dconv_mode=1,
+        dconv_depth=2,
+        dconv_comp=4,
+        dconv_time_attn=2,
+        dconv_lstm=2,
+        dconv_init=1e-3,
+        # Weight init
+        rescale=0.1,
+        # Metadata
+        lr_sr=4000,
+        hr_sr=16000,
+        spec_upsample=True,
+        act_func="snake",
+        debug=False,
+    ):
         """
         Args:
             sources (list[str]): list of source names.
@@ -355,31 +390,37 @@ class Aero(nn.Module):
                 ker = freqs
 
             kw = {
-                'kernel_size': ker,
-                'stride': stri,
-                'freq': freq,
-                'pad': pad,
-                'norm': norm,
-                'rewrite': rewrite,
-                'norm_groups': norm_groups,
-                'dconv_kw': {
-                    'lstm': lstm,
-                    'time_attn': time_attn,
-                    'depth': dconv_depth,
-                    'compress': dconv_comp,
-                    'init': dconv_init,
-                    'act_func': act_func,
-                    'reshape': True,
-                    'freq_dim': freqs // strides[index] if freq else freqs
-                }
+                "kernel_size": ker,
+                "stride": stri,
+                "freq": freq,
+                "pad": pad,
+                "norm": norm,
+                "rewrite": rewrite,
+                "norm_groups": norm_groups,
+                "dconv_kw": {
+                    "lstm": lstm,
+                    "time_attn": time_attn,
+                    "depth": dconv_depth,
+                    "compress": dconv_comp,
+                    "init": dconv_init,
+                    "act_func": act_func,
+                    "reshape": True,
+                    "freq_dim": freqs // strides[index] if freq else freqs,
+                },
             }
 
             kw_dec = dict(kw)
 
-            enc = HEncLayer(chin_z, chout_z,
-                            dconv=dconv_mode & 1, context=context_enc,
-                            is_first=index == 0, freq_attn=freq_attn, freq_dim=freqs,
-                            **kw)
+            enc = HEncLayer(
+                chin_z,
+                chout_z,
+                dconv=dconv_mode & 1,
+                context=context_enc,
+                is_first=index == 0,
+                freq_attn=freq_attn,
+                freq_dim=freqs,
+                **kw,
+            )
 
             self.encoder.append(enc)
             if index == 0:
@@ -387,8 +428,14 @@ class Aero(nn.Module):
                 chin_z = chin
                 if self.cac:
                     chin_z *= 2
-            dec = HDecLayer(2 * chout_z, chin_z, dconv=dconv_mode & 2,
-                            last=index == 0, context=context, **kw_dec)
+            dec = HDecLayer(
+                2 * chout_z,
+                chin_z,
+                dconv=dconv_mode & 2,
+                last=index == 0,
+                context=context,
+                **kw_dec,
+            )
 
             self.decoder.insert(0, dec)
 
@@ -400,7 +447,8 @@ class Aero(nn.Module):
 
             if index == 0 and freq_emb:
                 self.freq_emb = ScaledEmbedding(
-                    freqs, chin_z, smooth=emb_smooth, scale=emb_scale)
+                    freqs, chin_z, smooth=emb_smooth, scale=emb_scale
+                )
                 self.freq_emb_scale = freq_emb
 
         if rescale:
@@ -445,16 +493,17 @@ class Aero(nn.Module):
 
     def forward(self, mix, return_spec=False, return_lr_spec=False):
         x = mix
+
         length = x.shape[-1]
 
         if self.debug:
-            logger.info(f'hdemucs in shape: {x.shape}')
+            logger.info(f"hdemucs in shape: {x.shape}")
 
         z = self._spec(x)
         x = self._move_complex_to_channels_dim(z)
 
         if self.debug:
-            logger.info(f'x spec shape: {x.shape}')
+            logger.info(f"x spec shape: {x.shape}")
 
         B, C, Fq, T = x.shape
 
@@ -471,7 +520,7 @@ class Aero(nn.Module):
             inject = None
             x = encode(x, inject)
             if self.debug:
-                logger.info(f'encoder {idx} out shape: {x.shape}')
+                logger.info(f"encoder {idx} out shape: {x.shape}")
             if idx == 0 and self.freq_emb is not None:
                 # add frequency embedding to allow for non equivariant convolutions
                 # over the frequency axis.
@@ -489,7 +538,7 @@ class Aero(nn.Module):
             x = decode(x, skip, lengths.pop(-1))
 
             if self.debug:
-                logger.info(f'decoder {idx} out shape: {x.shape}')
+                logger.info(f"decoder {idx} out shape: {x.shape}")
 
         # Let's make sure we used all stored skip connections.
         assert len(saved) == 0
@@ -498,22 +547,22 @@ class Aero(nn.Module):
         x = x * std[:, None] + mean[:, None]
 
         if self.debug:
-            logger.info(f'post view shape: {x.shape}')
+            logger.info(f"post view shape: {x.shape}")
 
         x_spec_complex = self._convert_to_complex(x)
 
         if self.debug:
-            logger.info(f'x_spec_complex shape: {x_spec_complex.shape}')
+            logger.info(f"x_spec_complex shape: {x_spec_complex.shape}")
 
         x = self._ispec(x_spec_complex)
 
         if self.debug:
-            logger.info(f'hdemucs out shape: {x.shape}')
+            logger.info(f"hdemucs out shape: {x.shape}")
 
-        x = x[..., :int(length * self.scale)]
+        x = x[..., : int(length * self.scale)]
 
         if self.debug:
-            logger.info(f'hdemucs out - trimmed shape: {x.shape}')
+            logger.info(f"hdemucs out - trimmed shape: {x.shape}")
 
         if return_spec:
             if return_lr_spec:
