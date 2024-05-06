@@ -162,7 +162,7 @@ class LrHrSet(Dataset):
 
 
 if __name__ == "__main__":
-    json_dir = '../egs/vctk/16-24/val'
+    json_dir = "../egs/vctk/16-24/val"
     lr_sr = 16000
     hr_sr = 24000
     pad = True
@@ -171,4 +171,4 @@ if __name__ == "__main__":
 
     data_set = LrHrSet(json_dir, lr_sr, hr_sr, stride_sec, segment_sec)
     assert_sets(data_set.lr_set, data_set.hr_set)
-    print(f'done asserting dataset from {json_dir}')
+    print(f"done asserting dataset from {json_dir}")

@@ -120,10 +120,10 @@ def run(args):
         torch.stack(
             [
                 lsd,
-                lsd_hf,
-                lsd_lf,
                 base_lsd,
+                lsd_hf,
                 base_lsd_hf,
+                lsd_lf,
                 base_lsd_lf,
                 rtf,
                 rtf_reciprocal,
