@@ -98,6 +98,8 @@ def run(args):
     model = _load_model(args)
     model.cuda()
 
+    print(model.flops(tt_loader))
+
     (
         lsd,
         lsd_hf,

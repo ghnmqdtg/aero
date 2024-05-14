@@ -11,6 +11,11 @@ from src.models.utils import capture_init
 from src.models.spec import spectro, ispectro
 from src.models.modules import DConv, ScaledEmbedding, FTB
 
+from copy import deepcopy
+from fvcore.nn import flop_count, parameter_count
+from torchinfo import summary
+
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -571,3 +576,39 @@ class Aero(nn.Module):
                 return x, x_spec_complex
 
         return x
+
+    @torch.no_grad()
+    def flops(self, tt_loader):
+        # shape = self.__input_shape__[1:]
+        supported_ops = {
+            "aten::silu": None,  # as relu is in _IGNORED_OPS
+            "aten::gelu": None,  # as relu is in _IGNORED_OPS
+            "aten::neg": None,  # as relu is in _IGNORED_OPS
+            "aten::exp": None,  # as relu is in _IGNORED_OPS
+            "aten::flip": None,  # as permute is in _IGNORED_OPS
+        }
+
+        model = deepcopy(self)
+        model.cuda().eval()
+
+        (lr, lr_path), (hr, hr_path) = next(iter(tt_loader))
+        lr = lr.cuda()
+
+        params = parameter_count(model)[""]
+        Gflops, unsupported = flop_count(
+            model=model,
+            inputs=(lr),
+            supported_ops=supported_ops,
+        )
+        statics = summary(
+            model,
+            input_data=[lr],
+            verbose=0,
+        )
+        del model
+        torch.cuda.empty_cache()
+
+        # Return the number of parameters and FLOPs
+        return (
+            f"{statics}\nparams {params/1e6:.2f}M, GFLOPs {sum(Gflops.values()):.2f}\n"
+        )

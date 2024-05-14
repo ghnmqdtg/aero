@@ -56,7 +56,7 @@ aero: # see aero.py for a detailed description
   hr_sr: ${experiment.hr_sr}
   spec_upsample: true
   act_func: snake
-  debug: false
+  debug: true
 
 adversarial: True
 features_loss_lambda: 100
