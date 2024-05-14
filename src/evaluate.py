@@ -97,7 +97,7 @@ def evaluate_lr_hr_data(
         args,
         filename,
     )
-    rtf = run_time / hr.shape[-1] * hr_sr
+    rtf = run_time / (hr.shape[-1] / hr_sr)
 
     if enhance:
         output_dir = (
